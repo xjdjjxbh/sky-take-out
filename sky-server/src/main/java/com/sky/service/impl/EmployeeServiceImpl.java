@@ -70,6 +70,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 新增员工
+     *
      * @param employeeDTO
      * @return
      */
@@ -99,13 +100,14 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 分页查询
+     *
      * @param employeePageQueryDTO
      * @return
      */
     @Override
     public PageResult pageQuery(EmployeePageQueryDTO employeePageQueryDTO) {
         //设置开始分页的代码以及每页显示的条数   它使用到的技术是用到了拦截器，然后动态的拼接sql，并且把请求参数传递给动态的sql
-        PageHelper.startPage(employeePageQueryDTO.getPage(),employeePageQueryDTO.getPageSize());
+        PageHelper.startPage(employeePageQueryDTO.getPage(), employeePageQueryDTO.getPageSize());
 
         //这里的泛型表示返回的数据单元的数据类型    在上面设置了pagehelper的参数就可以了，这里的返回值类型必须是page类型的，才能使动态的拼接sql起作用
         Page<Employee> page = employeeMapper.pageQuery(employeePageQueryDTO);
@@ -115,6 +117,25 @@ public class EmployeeServiceImpl implements EmployeeService {
         pageResult.setTotal(total);
         pageResult.setRecords(result);
         return pageResult;
+    }
+
+
+    /**
+     * 启用禁用员工账号
+     *
+     * @param status
+     * @param id
+     * @return
+     */
+    @Override
+    public void startOrStop(Integer status, Long id) {
+        Employee employee = Employee.builder()
+                .status(status)
+                .id(id)
+                .build();
+
+        employeeMapper.update(employee);
+
     }
 
 }
