@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sky.mapper.DishMapper">
+
+    <!--
+        仅仅把菜品插入还不够，还要返回插入菜品之后，菜品的id是多少，这样才能协助后面根据菜品的id选择口味
+        useGeneratedKeys表示我们需要生成的主键值 keyProperty表示把生成的主键值赋值给对象里面的id属性
+        也就是说插入菜品之后会生成菜品的id，然后我们会把生成的菜品id返回给对象里面的id
+    -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into dish(name, category_id, price, image, description, create_time, update_time, create_user, update_user,status)
+            VALUES
+        (#{name},#{categoryId},#{price},#{image},#{description},#{createTime},#{updateTime},#{createUser},#{updateUser},#{status})
+    </insert>
+
+</mapper>

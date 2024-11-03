@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sky.mapper.DishFlavorMapper">
+
+
+    <insert id="insertBatch">
+        insert into dish_flavor(dish_id, name, value)
+            VALUES
+        <!--前端传过来的对象是一个list集合，在遍历中定义集合中的单个对象的名称为df
+            在这多次插入的每个对象之间，要使用逗号来分隔
+        -->
+        <foreach collection="flavors" item="df" separator=",">
+            (#{df.dishId},#{df.name},#{df.value})
+        </foreach>
+
+    </insert>
+</mapper>

@@ -77,12 +77,15 @@ public class AutoFillAspect {
 
                 //获取实体所对应的方法
                 Method setCreateTime = entity.getClass().getMethod(AutoFillConstant.SET_CREATE_TIME, LocalDateTime.class);
+                //传入要查找的方法的方法名和参数类型，以此来精确地匹配方法，避免因为重载而导致的表达不清
                 Method setCreateUser = entity.getClass().getMethod(AutoFillConstant.SET_CREATE_USER, Long.class);
                 Method setUpdateTime = entity.getClass().getMethod(AutoFillConstant.SET_UPDATE_TIME, LocalDateTime.class);
                 Method setUpdateUser = entity.getClass().getMethod(AutoFillConstant.SET_UPDATE_USER, Long.class);
 
-                //通过反射为对象属性赋值
-                setCreateTime.invoke(entity, now);
+                /*通过反射为对象属性赋值
+                刚才已经获得了对象，通过对象获取到了它所对应的类里面的方法
+                 */
+                setCreateTime.invoke(entity, now);     //调用刚才获取到的方法，invoke就是调用的意思，括号里面的第一个参数表示调用该方法的对象是谁，第二个参数表示该方法的实参
                 setCreateUser.invoke(entity, id);
                 setUpdateTime.invoke(entity, now);
                 setUpdateUser.invoke(entity, id);

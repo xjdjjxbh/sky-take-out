@@ -37,3 +37,8 @@ sky:
     admin-ttl: 72000000
     # 设置前端传递过来的令牌名称
     admin-token-name: token
+  alioss:
+    endpoint: ${sky.alioss.endpoint}      #这里是使用引用，而不是写死，因为如果改变环境的话，可能用的不是这个账号，那么这个就要跟着换，很麻烦，使用引用的话，就可以只用该环境，这个就自动的跟着换了
+    access-key-id: ${sky.alioss.access-key-id}
+    access-key-secret: ${sky.alioss.access-key-secret}
+    bucket-name: ${sky.alioss.bucket-name}
