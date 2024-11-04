@@ -168,9 +168,13 @@ public class DishServiceImpl implements DishService {
             //向口味表插入n条数据,实现批量插入
             dishFlavorMapper.insertBatch(flavors);
         }
+    }
 
-
-
-
+    @Override
+    public void updateStatus(Integer status, Long id) {
+        Dish dish = Dish.builder()
+                .id(id)
+                .status(status).build();
+        dishMapper.update(dish);
     }
 }
