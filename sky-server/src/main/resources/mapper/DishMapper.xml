@@ -38,4 +38,23 @@
              </foreach>
     </delete>
 
+    <update id="update">
+        update dish
+        <set>
+            <if test="name != null"> name = #{name}, </if>
+            <if test="categoryId != null"> category_id = #{categoryId}, </if>
+            <if test="price != null"> price = #{price}, </if>
+            <if test="image != null"> image = #{image}, </if>
+            <if test="description != null"> description = #{description}, </if>
+            <if test="status != null"> status = #{status}, </if>
+            <!--自动填充是在执行方法的时候，会自动把信息填充到对象里面去，而不需要人手动的填充到对象里面去
+                填充到对象里面去了之后，我们就可以获取对象里面被自动填充过的信息，然后插入到数据库里面去
+                所以自动填充的内容，还是要我们手动填充到数据库里面去
+            -->
+            <if test="updateTime != null"> update_time = #{updateTime}, </if>
+            <if test="updateUser != null"> update_user = #{updateUser}, </if>
+        </set>
+        where id = #{id}
+    </update>
+
 </mapper>

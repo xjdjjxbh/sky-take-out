@@ -122,4 +122,55 @@ public class DishServiceImpl implements DishService {
         //根据菜品id集合，批量删除关联的口味数据
         dishFlavorMapper.deleteByDishIds(dishIds);
     }
+
+    @Override
+    /**
+     * 根据菜品id查询菜品信息和对应的口味数据
+     */
+    public DishVO getByIdWithFlavor(Long id) {
+
+        //查询菜品表，获取菜品的基本信息
+        Dish dish = dishMapper.selectById(id);
+
+        //查询菜品的口味数据
+        List<DishFlavor> flavors = dishFlavorMapper.getByDishId(id);
+
+        //将查询到的数据进行封装
+        DishVO dishVO = new DishVO();
+        BeanUtils.copyProperties(dish, dishVO);
+        dishVO.setFlavors(flavors);
+        return dishVO;
+    }
+
+    /**
+     * 根据id修改菜品基本信息和口味信息
+     * @param dishDTO
+     */
+    @Override
+    public void updateWithFlavor(DishDTO dishDTO) {
+        //修改菜品表基本信息   因为dishDTO里面还包含了口味数据，而我们只需要dish的基本信息，所以使用dishDTO不太合理
+        Dish dish = new Dish();
+        BeanUtils.copyProperties(dishDTO, dish);
+        dishMapper.update(dish);
+
+        //先删除原来的口味数据
+        dishFlavorMapper.deleteByDishId(dish.getId());
+
+        //重新插入口味数据
+        List<DishFlavor> flavors = dishDTO.getFlavors();
+        if (flavors != null && flavors.size() > 0) {
+            /*
+             当前的口味有可能是新增出来的(例如菜品A之前只有辣味，现在又出了甜味的，所以我们要给这个甜味指定它所对应的菜是什么)
+             所以在插入口味数据之前，还要设置这个口味对应的菜品的id
+             */
+            flavors.forEach(flavor -> {flavor.setDishId(dishDTO.getId());});
+
+            //向口味表插入n条数据,实现批量插入
+            dishFlavorMapper.insertBatch(flavors);
+        }
+
+
+
+
+    }
 }
