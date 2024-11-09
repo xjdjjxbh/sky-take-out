@@ -68,4 +68,7 @@ public interface DishMapper {
     @AutoFill(value = OperationType.UPDATE)
     //修改的时候要更新修改时间和修改人，所以要加上自动填充注解
     void update(Dish dish);
+
+
+    List<Dish> list(Dish dish);
 }
