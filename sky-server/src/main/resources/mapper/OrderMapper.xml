@@ -14,4 +14,65 @@
              #{consignee},#{cancelReason},#{rejectionReason},#{cancelTime},#{estimatedDeliveryTime},
              #{deliveryStatus},#{deliveryTime},#{packAmount},#{tablewareNumber},#{tablewareStatus})
     </insert>
+
+
+    <update id="update" parameterType="com.sky.entity.Orders">
+        update orders
+        <set>
+            <if test="cancelReason != null and cancelReason!='' ">
+                cancel_reason=#{cancelReason},
+            </if>
+            <if test="rejectionReason != null and rejectionReason!='' ">
+                rejection_reason=#{rejectionReason},
+            </if>
+            <if test="cancelTime != null">
+                cancel_time=#{cancelTime},
+            </if>
+            <if test="payStatus != null">
+                pay_status=#{payStatus},
+            </if>
+            <if test="payMethod != null">
+                pay_method=#{payMethod},
+            </if>
+            <if test="checkoutTime != null">
+                checkout_time=#{checkoutTime},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="deliveryTime != null">
+                delivery_time = #{deliveryTime}
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="pagerQuery" resultType="com.sky.entity.Orders">
+        select * from orders
+        <where>
+            <if test="number != null">
+                and number like concat('%',#{number},'%')
+            </if>
+            <if test="phone != null">
+                and phone like concat('%',#{phone},'%')
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="userId != null">
+                and user_id = #{userId}
+            </if>
+            <!--这里开始时间和结束时间分开写是因为用户可能只查询从什么时候开始的订单，也可能查询到什么时候结束的订单
+                因此在这里开始时间和结束时间里面的任意一者都是可以为空的
+                这里要记住大于符号是怎么写的，小于符号是怎么写的
+            -->
+            <if test="beginTime != null">
+                and order_time &gt;= #{beginTime}
+            </if>
+            <if test="endTime != null">
+                and order_time &lt;= #{endTime}
+            </if>
+        </where>
+        order by order_time desc
+    </select>
 </mapper>
