@@ -1,5 +1,6 @@
 package com.sky.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -18,6 +19,7 @@ import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+import com.sky.websocket.WebSocketServer;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,7 +51,7 @@ public class OrderServiceImpl implements OrderService {
     private UserMapper userMapper;
 
     @Autowired
-    private WeChatPayUtil weChatPayUtil;
+    private WebSocketServer webSocketServer;
 
     public static Long orderId;
 
@@ -140,6 +143,17 @@ public class OrderServiceImpl implements OrderService {
 
         orderMapper.updateStatus(OrderStatus, OrderPaidStatus, check_out_time, orderId);
 
+        //支付成功之后使用webSocket向客户端浏览器推送消息（type orderId content）  第一个表示是下单还是催单，第三个表示订单号
+        HashMap<Object, Object> map = new HashMap<>();
+        map.put("type", 1);     //1 下单提醒    2 催单提醒
+        map.put("orderId", orderId);
+        map.put("content", "订单号：" + ordersPaymentDTO.getOrderNumber());
+
+        //把获取到的信息map转为json字符串
+        String jsonString = JSON.toJSONString(map);
+        //把带有订单信息的json字符串推送到客户端浏览器
+        webSocketServer.sendToAllClient(jsonString);
+
         return vo;
 
     }
@@ -162,6 +176,7 @@ public class OrderServiceImpl implements OrderService {
                 .checkoutTime(LocalDateTime.now())
                 .build();
         orderMapper.update(orders);
+
     }
 
     /**
@@ -382,6 +397,26 @@ public class OrderServiceImpl implements OrderService {
                     .build();
             orderMapper.update(orderCompleted);
         }
+    }
+
+    /**
+     * 用户催单
+     *
+     * @param id
+     */
+    @Override
+    public void reminder(Long id) {
+        Orders orders = orderMapper.getById(id);
+        if (orders == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        HashMap<Object, Object> map = new HashMap<>();
+        map.put("type", 2);    //2表示用户催单
+        map.put("orderId", id);
+        map.put("content", "订单号：" + orders.getNumber());
+        String jsonString = JSON.toJSONString(map);
+        webSocketServer.sendToAllClient(jsonString);
     }
 
     //因为·把查询到的对象封装成VO这种情况用的很多，所以这里单独提取出一个方法来
