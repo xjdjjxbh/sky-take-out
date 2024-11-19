@@ -3,13 +3,13 @@ package com.sky.mapper;
 import com.github.pagehelper.Page;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.entity.Orders;
-import com.sky.vo.OrderStatisticsVO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface OrderMapper {
@@ -79,5 +79,22 @@ public interface OrderMapper {
      */
     @Select("select * from orders where status = #{status} and order_time < #{orderTime}")
     List<Orders> getByStatusAndOrderTime(Integer status, LocalDateTime orderTime);
+
+
+    /**
+     * 统计指定时间段内某个状态的营业额
+     * @param
+     * @return
+     */
+    Double sumByMap(HashMap<String, Object> map);
+
+    @MapKey("order_time")
+    Map<LocalDate, Object> sumByDateRange(LocalDateTime startTime,
+                                          LocalDateTime endTime,
+                                          int status);
+
+
+
+
 
 }
