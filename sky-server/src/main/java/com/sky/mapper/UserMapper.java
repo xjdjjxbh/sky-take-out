@@ -5,6 +5,9 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+
 /*
 在实际运行时，Spring Boot 会扫描到 @Mapper 注解，并自动创建代理实例，以供依赖注入使用。
 Spring Boot 配合 MyBatis，通过 @MapperScan 或 @Mapper 注解，自动扫描 @Mapper 标记的接口，然后为每个接口创建代理类。
@@ -37,4 +40,11 @@ public interface UserMapper {
      */
     @Select("select * from user where id = #{userId}")
     User getById(Long userId);
+
+    /**
+     * 按条件查询用户数量
+     * @param conditionMap
+     * @return
+     */
+    Integer countByMap(HashMap<String, LocalDateTime> conditionMap);
 }

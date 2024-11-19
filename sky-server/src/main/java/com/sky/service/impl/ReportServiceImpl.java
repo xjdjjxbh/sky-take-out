@@ -2,8 +2,10 @@ package com.sky.service.impl;
 
 import com.sky.entity.Orders;
 import com.sky.mapper.OrderMapper;
+import com.sky.mapper.UserMapper;
 import com.sky.service.ReportService;
 import com.sky.vo.TurnoverReportVO;
+import com.sky.vo.UserReportVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,9 @@ public class ReportServiceImpl implements ReportService {
 
     @Autowired
     private OrderMapper orderMapper;
+
+    @Autowired
+    private UserMapper userMapper;
 
     /**
      * 统计指定时间区间内的营业额数据
@@ -92,7 +97,7 @@ public class ReportServiceImpl implements ReportService {
                 BigDecimal turnover = (BigDecimal) nestedMap.getOrDefault("turnover", 0.0);
                 double money = turnover.doubleValue();
                 turnoverList.add(money); // 默认值为 0.0
-            }else {
+            } else {
                 turnoverList.add(0.0);
             }
             current = current.plusDays(1);
@@ -108,8 +113,51 @@ public class ReportServiceImpl implements ReportService {
         return turnoverReportVO;
     }
 
+    /**
+     * 统计指定时间区间内的用户数量
+     *
+     * @param begin
+     * @param end
+     * @return
+     */
+    @Override
+    public UserReportVO getUserStatistics(LocalDate begin, LocalDate end) {
+
+        List<LocalDate> dateList = new ArrayList<>();
+
+        while (begin.isBefore(end)) {
+            dateList.add(begin);
+            begin = begin.plusDays(1);
+        }
+
+        //存放每天新增用户数量
+        ArrayList<Integer> newUserList = new ArrayList<>();
+        //存放每天用户总数量
+        ArrayList<Integer> totalUserList = new ArrayList<>();
 
 
+        for (LocalDate localDate : dateList) {
+            HashMap<String, LocalDateTime> conditionMap = new HashMap<>();
+            LocalDateTime todayBegin = LocalDateTime.of(localDate, LocalTime.MIN);
+            LocalDateTime todayEnd = LocalDateTime.of(localDate, LocalTime.MAX);
+            conditionMap.put("end", todayEnd);
+            Integer todayUserNumber = userMapper.countByMap(conditionMap);
+            conditionMap.put("start", todayBegin);
+            Integer todayNewUserNumber = userMapper.countByMap(conditionMap);
+            totalUserList.add(todayUserNumber);      //添加到今天为止的用户总数
+            newUserList.add(todayNewUserNumber);       //添加今天新增的用户数量
+        }
+
+        String dateListString = StringUtils.join(dateList, ",");
+        String newUserString = StringUtils.join(newUserList, ",");
+        String totalUserString = StringUtils.join(totalUserList, ",");
+        return UserReportVO
+                .builder()
+                .dateList(dateListString)
+                .newUserList(newUserString)
+                .totalUserList(totalUserString)
+                .build();
+    }
 
 
 }
