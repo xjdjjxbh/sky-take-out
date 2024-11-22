@@ -1,15 +1,18 @@
 package com.sky.service.impl;
 
+import com.sky.dto.GoodsSalesDTO;
 import com.sky.entity.Orders;
-import com.sky.mapper.OrderMapper;
-import com.sky.mapper.UserMapper;
+import com.sky.mapper.*;
 import com.sky.service.ReportService;
+import com.sky.vo.OrderReportVO;
+import com.sky.vo.SalesTop10ReportVO;
 import com.sky.vo.TurnoverReportVO;
 import com.sky.vo.UserReportVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -19,7 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
-import java.util.stream.Collectors;
+
 
 @Slf4j
 @Service
@@ -31,6 +34,15 @@ public class ReportServiceImpl implements ReportService {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private SetmealMapper setmealMapper;
+
+    @Autowired
+    private DishMapper dishMapper;
+
+    @Autowired
+    private OrderDetailMapper orderDetailMapper;
 
     /**
      * 统计指定时间区间内的营业额数据
@@ -77,6 +89,9 @@ public class ReportServiceImpl implements ReportService {
 
     public TurnoverReportVO getTurnoverStatistics(LocalDate begin, LocalDate end) {
         // 查询范围内的营业额数据
+        begin =begin.plusDays(1);
+        end =end.plusDays(1);
+
         LocalDateTime startTime = LocalDateTime.of(begin, LocalTime.MIN);
         LocalDateTime endTime = LocalDateTime.of(end, LocalTime.MAX);
 
@@ -122,8 +137,11 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     public UserReportVO getUserStatistics(LocalDate begin, LocalDate end) {
+        begin =begin.plusDays(1);
+        end =end.plusDays(1);
 
         List<LocalDate> dateList = new ArrayList<>();
+        end = end.plusDays(1);
 
         while (begin.isBefore(end)) {
             dateList.add(begin);
@@ -156,6 +174,97 @@ public class ReportServiceImpl implements ReportService {
                 .dateList(dateListString)
                 .newUserList(newUserString)
                 .totalUserList(totalUserString)
+                .build();
+    }
+
+    /**
+     * 订单统计
+     *
+     * @param begin
+     * @param end
+     * @return
+     */
+    @Override
+    public OrderReportVO getOrderStatistics(LocalDate begin, LocalDate end) {
+        begin =begin.plusDays(1);
+        end =end.plusDays(1);
+        //存放请求日期区间里面的每一天
+        List<LocalDate> dateList = new ArrayList<>();
+        end = end.plusDays(1);
+
+        while (begin.isBefore(end)) {
+            dateList.add(begin);
+            begin = begin.plusDays(1);
+        }
+
+        //存放每天订单数量
+        ArrayList<Integer> orderCountList = new ArrayList<>();
+        //存放已完成的订单的数量
+        ArrayList<Integer> orderCompletedCountList = new ArrayList<>();
+        for (LocalDate localDate : dateList) {
+            HashMap conditionMap = new HashMap<>();
+            LocalDateTime todayBegin = LocalDateTime.of(localDate, LocalTime.MIN);
+            LocalDateTime todayEnd = LocalDateTime.of(localDate, LocalTime.MAX);
+            conditionMap.put("end", todayEnd);
+            conditionMap.put("start", todayBegin);
+            Integer orderNumber = userMapper.countOrderNumberByMap(conditionMap);
+            conditionMap.put("status", Orders.COMPLETED);
+            Integer orderCompletedNumber = userMapper.countOrderNumberByMap(conditionMap);
+            orderCountList.add(orderNumber);
+            orderCompletedCountList.add(orderCompletedNumber);
+
+        }
+
+        int totalOrderNumber = orderCountList.stream().mapToInt(Integer::intValue).sum();
+        int finishedOrderNumber = orderCompletedCountList.stream().mapToInt(Integer::intValue).sum();
+
+        Double finishRate = totalOrderNumber == 0 ? 0.0 : (finishedOrderNumber + 0.0) / totalOrderNumber;
+
+        return OrderReportVO
+                .builder()
+                .totalOrderCount(totalOrderNumber)
+                .validOrderCount(finishedOrderNumber)
+                .dateList(StringUtils.join(dateList, ","))
+                .orderCountList(StringUtils.join(orderCountList, ","))
+                .validOrderCountList(StringUtils.join(orderCompletedCountList, ","))
+                .orderCompletionRate(finishRate)
+                .build();
+    }
+
+    /**
+     * 销量top10统计
+     *
+     * @param begin
+     * @param end
+     * @return
+     */
+    @Override
+    public SalesTop10ReportVO getTop10Statistics(LocalDate begin, LocalDate end) {
+
+        end = end.plusDays(1);
+
+        ArrayList<String> nameList = new ArrayList<>();
+        ArrayList<Integer> numberList = new ArrayList<>();
+
+        LocalDateTime todayBegin = LocalDateTime.of(begin, LocalTime.MIN);
+        LocalDateTime todayEnd = LocalDateTime.of(end, LocalTime.MAX);
+        HashMap<Object, Object> map = new HashMap<>();
+
+        map.put("start", todayBegin);
+        map.put("end", todayEnd);
+        map.put("status", Orders.COMPLETED);
+        //获取到销量前10的菜品或者套餐列表
+        List<GoodsSalesDTO> goodsSalesDTOList = orderMapper.getSalesTop10(map);
+
+        for (GoodsSalesDTO goodsSalesDTO : goodsSalesDTOList) {
+            nameList.add(goodsSalesDTO.getName());
+            numberList.add(goodsSalesDTO.getNumber());
+        }
+
+        return SalesTop10ReportVO
+                .builder()
+                .nameList(StringUtils.join(nameList, ","))
+                .numberList(StringUtils.join(numberList, ","))
                 .build();
     }
 

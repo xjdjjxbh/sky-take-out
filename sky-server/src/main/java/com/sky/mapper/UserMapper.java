@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /*
 在实际运行时，Spring Boot 会扫描到 @Mapper 注解，并自动创建代理实例，以供依赖注入使用。
@@ -46,5 +48,13 @@ public interface UserMapper {
      * @param conditionMap
      * @return
      */
-    Integer countByMap(HashMap<String, LocalDateTime> conditionMap);
+    Integer countByMap(Map conditionMap);
+//    Integer countByMap(HashMap<String, LocalDateTime> conditionMap);
+
+    /**
+     * 根据条件查询订单数量
+     * @param conditionMap
+     * @return
+     */
+    Integer countOrderNumberByMap(HashMap conditionMap);
 }
